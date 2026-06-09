@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrepSheet — Catering Portion & Cost Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F2EB; --surface:#FFFFFF; --ink:#1C1917; --muted:#6F6A62; --faint:#A39E94;
+    --line:#E7E1D6; --line-soft:#F0EBE2;
+    --ember:#C2410C; --ember-bg:#FBEDE4; --ember-line:#F0CBB3;
+    --leaf:#15803D; --leaf-bg:#EBF7EF; --leaf-line:#C3E7CF;
+    --mono:"Space Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --radius:12px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .mono{font-family:var(--mono)}
+
+  /* Header */
+  header{background:var(--ink);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:14px}
+  header .mark{width:38px;height:38px;border-radius:9px;background:var(--ember);
+    display:flex;align-items:center;justify-content:center;font-family:"Fraunces",serif;
+    font-weight:600;font-size:22px;flex-shrink:0}
+  header h1{font-family:"Fraunces",serif;font-weight:600;font-size:21px;letter-spacing:-.01em}
+  header p{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.55;margin-top:1px}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px;display:grid;
+    grid-template-columns:286px 1fr;gap:20px;align-items:start}
+
+  /* Cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px}
+  .sidebar{display:flex;flex-direction:column;gap:12px;position:sticky;top:22px}
+  .slabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--faint);margin-bottom:10px;display:block}
+
+  /* Inputs */
+  input[type=number],select{font-family:inherit;font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;
+    background:var(--surface);outline:none;width:100%}
+  input[type=number]:focus,select:focus{border-color:var(--ember)}
+  .gnum{width:78px;font-size:24px;font-family:var(--mono);font-weight:700;text-align:center;
+    border:2px solid var(--ember);padding:4px 6px;flex:none}
+  input[type=range]{width:100%;accent-color:var(--ember);margin-top:10px}
+  .rscale{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:3px}
+
+  /* Meal buttons */
+  .mbtn{display:block;width:100%;text-align:left;padding:9px 13px;border-radius:var(--radius-sm);
+    border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--ink);
+    font-family:inherit;font-size:13.5px;font-weight:500;transition:.13s;margin-bottom:6px}
+  .mbtn:last-child{margin-bottom:0}
+  .mbtn .d{font-size:11px;color:var(--faint);font-weight:400;margin-top:1px}
+  .mbtn:hover{border-color:var(--ember-line);background:var(--ember-bg)}
+  .mbtn.on{border:1.5px solid var(--ember);background:var(--ember-bg);color:#7A2A08}
+  .mbtn.on .d{color:var(--ember)}
+
+  /* Dietary pills */
+  .pills{display:flex;gap:8px;margin-bottom:4px}
+  .pill{flex:1;background:var(--line-soft);border-radius:var(--radius-sm);padding:9px;text-align:center}
+  .pill .big{font-family:var(--mono);font-size:17px;font-weight:700}
+  .pill .lab{font-size:11px;color:var(--muted);margin-top:1px}
+  .pill .cnt{font-size:12px;font-weight:600;margin-top:1px}
+  .pill.o .big{color:var(--ember)} .pill.v .big{color:var(--leaf)}
+
+  /* Toggle */
+  .togrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .togrow .t{font-size:13.5px;font-weight:500}
+  .togrow .s{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .tog{width:42px;height:24px;border-radius:12px;background:#D6D0C5;border:none;cursor:pointer;
+    position:relative;flex-shrink:0;transition:.2s}
+  .tog.on{background:var(--ember)}
+  .tog::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .tog.on::after{transform:translateX(18px)}
+
+  /* Custom add form */
+  .cform{display:grid;grid-template-columns:1fr;gap:8px}
+  .cform .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .addbtn{width:100%;padding:9px;border:none;border-radius:var(--radius-sm);background:var(--ink);
+    color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px}
+  .addbtn:hover{background:#000}
+  .addbtn.cancel{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .addbtn.cancel:hover{background:var(--line-soft);color:var(--ink)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;padding-top:4px}
+  .chip{font-family:inherit;font-size:12.5px;color:var(--muted);background:var(--line-soft);
+    border:1px solid var(--line);border-radius:20px;padding:5px 12px;cursor:pointer}
+  .chip:hover{border-color:var(--ember);color:var(--ember);background:var(--ember-bg)}
+  .restore-all{font-family:inherit;font-size:11px;font-weight:500;color:var(--ember);background:none;
+    border:none;cursor:pointer;text-transform:none;letter-spacing:0}
+  .restore-all:hover{text-decoration:underline}
+
+  /* Sheet */
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+    margin-bottom:14px}
+  .sheet-head h2{font-family:"Fraunces",serif;font-weight:600;font-size:22px;letter-spacing:-.01em}
+  .sheet-head .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .acts{display:flex;gap:8px;flex-shrink:0}
+  .act{display:flex;align-items:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:500;
+    padding:8px 13px;border-radius:var(--radius-sm);border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+  .act:hover{border-color:var(--faint);background:var(--line-soft)}
+  .act.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .act.primary:hover{background:#000}
+
+  .catcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 18px;margin-bottom:10px}
+  .clabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--ember);padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--line-soft);
+    display:flex;justify-content:space-between;align-items:center}
+  .clabel .csub{font-weight:400;color:var(--faint);letter-spacing:.04em;text-transform:none;font-size:11px}
+  .row{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .row+.row{border-top:1px solid var(--line-soft)}
+  .row .nm{flex:1;min-width:0}
+  .row .nm .t{font-size:13.5px;color:var(--ink)}
+  .row .nm .pp{font-size:11px;color:var(--faint);margin-top:1px}
+  .row .nm.veg .t{color:var(--leaf)}
+  .qbadge{font-family:var(--mono);font-size:13px;font-weight:700;background:var(--line-soft);
+    color:var(--ink);padding:4px 8px;border-radius:var(--radius-sm);width:94px;text-align:right;
+    white-space:nowrap;flex-shrink:0}
+  .qbadge.veg{background:var(--leaf-bg);color:var(--leaf)}
+  .price-in{width:72px;flex-shrink:0}
+  .price-in input{width:100%;padding:5px 7px;font-size:12px;font-family:var(--mono);text-align:right}
+  .linecost{font-family:var(--mono);font-size:13px;font-weight:700;width:70px;text-align:right;
+    color:var(--ink);flex-shrink:0}
+  .ctrls{display:flex;justify-content:flex-end;gap:2px;width:54px;flex-shrink:0}
+  .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;
+    line-height:1;padding:2px 4px}
+  .del:hover{color:var(--ember)}
+
+  /* Cost summary */
+  .costsum{background:var(--ink);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:10px}
+  .costsum .grid{display:flex;gap:10px}
+  .costsum .box{flex:1;background:rgba(255,255,255,.07);border-radius:var(--radius-sm);padding:12px 14px}
+  .costsum .box .l{font-size:11px;text-transform:uppercase;letter-spacing:.07em;opacity:.6}
+  .costsum .box .n{font-family:var(--mono);font-size:24px;font-weight:700;margin-top:4px}
+  .costsum .box .n.accent{color:#FDBA8C}
+
+  .tip{padding:11px 15px;background:var(--ember-bg);border:1px solid var(--ember-line);
+    border-radius:var(--radius);font-size:12.5px;color:#7A2A08}
+  .tip b{font-weight:600}
+
+  .empty{font-size:12.5px;color:var(--faint);padding:6px 0;font-style:italic}
+
+  @media (max-width:820px){
+    .wrap{grid-template-columns:1fr}
+    .sidebar{position:static}
+  }
+  @media print{
+    body{background:#fff}
+    header,.sidebar,.acts{display:none!important}
+    .wrap{display:block;max-width:100%;padding:0}
+    .card,.catcard,.costsum{border:1px solid #ccc;break-inside:avoid;box-shadow:none}
+    .costsum{background:#fff!important;color:#000!important;border:2px solid #000}
+    .costsum .box{background:#f3f3f3}
+    .costsum .box .n.accent{color:#000}
+    .price-in{display:none!important}
+    .ctrls{display:none!important}
+    .sheet-head h2{color:#000}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">P</div>
+  <div>
+    <h1>PrepSheet</h1>
+    <p>Catering Portion &amp; Cost Calculator</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="card">
+      <span class="slabel">Guest count</span>
+      <div style="display:flex;align-items:baseline;gap:9px">
+        <input type="number" id="gi" class="gnum" value="50" min="1" max="2000">
+      </div>
+      <input type="range" id="gs" min="5" max="500" value="50" step="1">
+      <div class="rscale"><span>5</span><span>500</span></div>
+    </div>
+
+    <div class="card">
+      <span class="slabel">Meal type</span>
+      <div id="mealBtns"></div>
+    </div>
+
+    <div class="card">
+      <span class="slabel">Cuisine style</span>
+      <select id="cuisine"></select>
+    </div>
+
+    <div class="card">
+      <span class="slabel">Dietary split</span>
+      <div class="pills">
+        <div class="pill o"><div class="big" id="oPct">85%</div><div class="lab">omnivore</div><div class="cnt" id="oN">43</div></div>
+        <div class="pill v"><div class="big" id="vPct">15%</div><div class="lab">veg / vegan</div><div class="cnt" id="vN">7</div></div>
+      </div>
+      <input type="range" id="vs" min="0" max="100" value="15" step="1">
+      <div class="rscale"><span>0% veg</span><span>100% veg</span></div>
+    </div>
+
+    <div class="card">
+      <div class="togrow" style="margin-bottom:14px">
+        <div><div class="t">+10% safety buffer</div><div class="s">Recommended for all events</div></div>
+        <button class="tog on" id="bufTog" aria-label="Toggle buffer"></button>
+      </div>
+      <div class="togrow">
+        <div><div class="t">Show cost estimate</div><div class="s">Per-item pricing &amp; totals</div></div>
+        <button class="tog" id="costTog" aria-label="Toggle cost"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="slabel">Add custom item</span>
+      <div class="cform">
+        <input type="text" id="cName" placeholder="Dish name (e.g. Mac &amp; cheese)">
+        <select id="cCat" title="Which section it joins"></select>
+        <div class="two">
+          <input type="number" id="cAmt" placeholder="Per person" min="0" step="0.1">
+          <select id="cUnit">
+            <option value="oz">oz</option>
+            <option value="lb">lb</option>
+            <option value="pieces">pieces</option>
+            <option value="servings">servings</option>
+            <option value="glasses">glasses</option>
+            <option value="cups">cups</option>
+          </select>
+        </div>
+        <input type="number" id="cPrice" placeholder="Price per unit ($) — optional" min="0" step="0.01">
+        <button class="addbtn" id="cAdd">+ Add to sheet</button>
+        <button class="addbtn cancel" id="cCancel" style="display:none">Cancel edit</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- SHEET -->
+  <main>
+    <div class="card" style="margin-bottom:12px">
+      <div class="sheet-head">
+        <div>
+          <h2 id="shTitle">Buffet — 50 guests</h2>
+          <div class="sub" id="shSub"></div>
+        </div>
+        <div class="acts">
+          <button class="act" id="copyBtn"><span>⧉</span> Copy</button>
+          <button class="act primary" onclick="window.print()"><span>⎙</span> Print / PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="costSummary"></div>
+    <div id="cats"></div>
+
+    <div class="tip">
+      <b>Tip:</b> Confirm final headcount 48 hrs before the event. All figures are totals to purchase — not per-table servings. Prices are editable estimates; adjust to your suppliers.
+    </div>
+  </main>
+
+</div>
+
+<script>
+const MEALS=[
+  {id:"plated",label:"Plated dinner",d:"Formal sit-down"},
+  {id:"buffet",label:"Buffet",d:"Self-serve, guests return"},
+  {id:"cocktail",label:"Cocktail hour",d:"Passed apps, ~2 hrs"},
+  {id:"bbq",label:"BBQ / cookout",d:"Casual outdoor"},
+  {id:"brunch",label:"Brunch",d:"Late morning service"}
+];
+
+const CUISINES={
+  standard:{label:"Standard / American",m:{}},
+  italian:{label:"Italian",m:{starch:1.35,bread:1.2,protein:.85}},
+  mexican:{label:"Mexican / Tex-Mex",m:{starch:1.35,protein:.9,veg:1.15,bread:1.1}},
+  indian:{label:"Indian",m:{starch:1.3,protein:.8,veg:1.25,bread:1.15}},
+  mediterranean:{label:"Mediterranean",m:{veg:1.3,protein:.9,starch:1.1}},
+  asian:{label:"Asian / Chinese",m:{starch:1.35,protein:.95,veg:1.2,bread:.7}},
+  southern:{label:"Southern / Soul food",m:{protein:1.2,starch:1.2,veg:1.1,bread:1.1}}
+};
+
+// amt = per person; u = unit; v=1 has veg alt; vn = veg name; g = cuisine group; p = $/cost-unit
+const CATS={
+  plated:[
+    {cat:"Proteins",items:[{n:"Main protein (meat / fish)",amt:7,u:"oz",v:1,vn:"Veggie main",g:"protein",p:6}]},
+    {cat:"Starches",items:[{n:"Starch — rice, pasta, or potatoes",amt:5,u:"oz",g:"starch",p:1.2}]},
+    {cat:"Vegetables",items:[{n:"Roasted or steamed veg",amt:4.5,u:"oz",g:"veg",p:2.5},{n:"Salad (dressed greens)",amt:2.5,u:"oz",g:"veg",p:3}]},
+    {cat:"Bread",items:[{n:"Dinner rolls",amt:1.5,u:"rolls",g:"bread",p:.35},{n:"Butter pats",amt:2,u:"pats",p:.05}]},
+    {cat:"Dessert",items:[{n:"Dessert servings",amt:1,u:"servings",p:2.5}]},
+    {cat:"Beverages",items:[{n:"Water",amt:3,u:"glasses",p:.03},{n:"Wine / beer",amt:2.5,u:"glasses",p:1.5},{n:"Coffee or tea",amt:1.5,u:"cups",p:.4}]}
+  ],
+  buffet:[
+    {cat:"Proteins",items:[{n:"Main protein (meat / fish)",amt:9,u:"oz",v:1,vn:"Veggie main",g:"protein",p:6},{n:"Secondary protein",amt:4,u:"oz",g:"protein",p:5}]},
+    {cat:"Starches",items:[{n:"Starch #1 — rice or potatoes",amt:6,u:"oz",g:"starch",p:1.2},{n:"Starch #2 — pasta or rolls",amt:4,u:"oz",g:"starch",p:1.5}]},
+    {cat:"Vegetables",items:[{n:"Hot vegetable dish",amt:5,u:"oz",g:"veg",p:2.5},{n:"Salad bar (greens + toppings)",amt:4,u:"oz",g:"veg",p:3}]},
+    {cat:"Bread",items:[{n:"Rolls or sliced baguette",amt:2,u:"pieces",g:"bread",p:.35}]},
+    {cat:"Dessert",items:[{n:"Dessert items",amt:1.5,u:"servings",p:2.5}]},
+    {cat:"Beverages",items:[{n:"Water",amt:4,u:"glasses",p:.03},{n:"Wine / beer",amt:3,u:"glasses",p:1.5},{n:"Soft drinks",amt:1.5,u:"cans",p:.6},{n:"Coffee or tea",amt:1.5,u:"cups",p:.4}]}
+  ],
+  cocktail:[
+    {cat:"Hot bites",items:[{n:"Hot apps — meatballs, skewers…",amt:5,u:"pieces",v:1,vn:"Hot veg bites",g:"protein",p:1.25}]},
+    {cat:"Cold bites",items:[{n:"Cold apps — crostini, wraps…",amt:4,u:"pieces",p:1},{n:"Cheese & charcuterie",amt:3,u:"oz",p:9},{n:"Crudités & dip",amt:2,u:"oz",g:"veg",p:2.5}]},
+    {cat:"Beverages",items:[{n:"Cocktails / wine / beer",amt:3,u:"drinks",p:4},{n:"Non-alcoholic option",amt:1.5,u:"glasses",p:.5},{n:"Water",amt:2,u:"glasses",p:.03}]}
+  ],
+  bbq:[
+    {cat:"Proteins",items:[{n:"Burgers / dogs / sausages",amt:2,u:"pieces",v:1,vn:"Veggie burgers",g:"protein",p:1.2},{n:"Smoked or grilled protein",amt:8,u:"oz",g:"protein",p:5}]},
+    {cat:"Sides",items:[{n:"Coleslaw",amt:4,u:"oz",g:"veg",p:2},{n:"Baked beans or potato salad",amt:5,u:"oz",g:"starch",p:2},{n:"Corn on the cob",amt:1,u:"ears",g:"veg",p:.5}]},
+    {cat:"Bread",items:[{n:"Burger or hot dog buns",amt:2,u:"buns",g:"bread",p:.4},{n:"Condiment packets",amt:3,u:"packets",p:.1}]},
+    {cat:"Dessert",items:[{n:"Dessert servings",amt:1.5,u:"servings",p:2}]},
+    {cat:"Beverages",items:[{n:"Soft drinks / lemonade",amt:2.5,u:"cups",p:.3},{n:"Beer / hard seltzer",amt:2,u:"drinks",p:1.5},{n:"Water bottles",amt:2,u:"bottles",p:.5}]}
+  ],
+  brunch:[
+    {cat:"Eggs & protein",items:[{n:"Eggs — scrambled or frittata",amt:2.5,u:"eggs",g:"protein",p:.3},{n:"Bacon or sausage",amt:3.5,u:"oz",g:"protein",p:5}]},
+    {cat:"Carbs",items:[{n:"Pastries — croissants, muffins…",amt:2,u:"pieces",g:"bread",p:1.5},{n:"Toast or bagels",amt:1.5,u:"pieces",g:"bread",p:.5},{n:"Pancakes or waffles",amt:2,u:"pieces",g:"starch",p:.4}]},
+    {cat:"Produce",items:[{n:"Fresh fruit",amt:4,u:"oz",g:"veg",p:2},{n:"Yogurt / granola",amt:3,u:"oz",p:3}]},
+    {cat:"Beverages",items:[{n:"Orange juice or mimosas",amt:1,u:"glasses",p:.5},{n:"Coffee",amt:2,u:"cups",p:.4},{n:"Water",amt:2,u:"glasses",p:.03}]}
+  ]
+};
+
+let S={guests:50,meal:"buffet",veg:15,buf:true,cost:false,cuisine:"standard",custom:[],priceOv:{},editing:null,hidden:{}};
+
+// quantity helper -> {label, costNum, costUnit}
+function qty(total,u){
+  if(u==="oz")  return {label: total>=16 ? (total/16).toFixed(1)+" lbs" : Math.ceil(total)+" oz", costNum: total/16, costUnit:"lb"};
+  if(u==="lb")  return {label: total.toFixed(1)+" lbs", costNum: total, costUnit:"lb"};
+  const n=Math.ceil(total);
+  return {label: n+" "+u, costNum: n, costUnit: u};
+}
+function money(x){return "$"+x.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+let runningCost=0;
+
+function buildRow(item,key,gc,m,cuisM,isVeg){
+  const grpMult = item.g && cuisM[item.g] ? cuisM[item.g] : 1;
+  const perPerson = item.amt * grpMult;
+  const total = perPerson * gc * m;
+  const q = qty(total,item.u);
+  const price = (S.priceOv[key]!=null) ? S.priceOv[key] : (item.p||0);
+  const lineCost = q.costNum * price;
+  runningCost += lineCost;
+
+  const ppTxt = (Math.round(perPerson*100)/100) + " " + item.u + "/person" + (grpMult!==1?" · "+CUISINES[S.cuisine].label.split(" ")[0]+" adj.":"");
+  const sfx = (item.v && !isVeg) ? ' <span style="font-size:10px;color:var(--faint)">(omnivore)</span>' : "";
+
+  let costCells = "";
+  if(S.cost){
+    costCells =
+      '<span class="price-in"><input type="number" min="0" step="0.01" value="'+price+'" '+
+        'data-key="'+key+'" oninput="setPrice(this)" title="$ per '+q.costUnit+'"></span>'+
+      '<span class="linecost">'+money(lineCost)+'</span>';
+  }
+  const ctrls = item.custom
+    ? '<button class="del" onclick="editCustom('+item.ci+')" aria-label="Edit" title="Edit">&#9998;</button>'
+      +'<button class="del" onclick="delCustom('+item.ci+')" aria-label="Remove" title="Remove">&times;</button>'
+    : (isVeg ? '' : '<button class="del" onclick="hidePreset(\''+key+'\')" aria-label="Remove from menu" title="Not serving this? Remove it">&times;</button>');
+
+  return '<div class="row"><div class="nm'+(isVeg?' veg':'')+'"><div class="t">'+
+    (isVeg?(item.vn||"Veggie option"):item.n)+sfx+'</div><div class="pp">'+ppTxt+'</div></div>'+
+    '<span class="qbadge'+(isVeg?' veg':'')+'">'+q.label+'</span>'+costCells+'<span class="ctrls">'+ctrls+'</span></div>';
+}
+
+function render(){
+  const {guests,meal,veg,buf,cuisine}=S;
+  const m=buf?1.1:1;
+  const vN=Math.round(guests*veg/100), oN=guests-vN;
+  const cuisM=CUISINES[cuisine].m;
+  runningCost=0;
+
+  document.getElementById("oPct").textContent=(100-veg)+"%";
+  document.getElementById("vPct").textContent=veg+"%";
+  document.getElementById("oN").textContent=oN+" guests";
+  document.getElementById("vN").textContent=vN+" guests";
+
+  const mi=MEALS.find(x=>x.id===meal);
+  document.getElementById("shTitle").textContent=mi.label+" — "+guests+" guests";
+  let sub=(vN>0?oN+" omnivore · "+vN+" veg/vegan · ":"")+(buf?"+10% buffer":"no buffer");
+  if(cuisine!=="standard") sub+=" · "+CUISINES[cuisine].label+" portions";
+  document.getElementById("shSub").textContent=sub;
+
+  document.querySelectorAll(".mbtn").forEach(b=>b.classList.toggle("on",b.dataset.id===meal));
+
+  // categories
+  const cont=document.getElementById("cats"); cont.innerHTML="";
+  const cats=CATS[meal]||[];
+  const currentCatNames=cats.map(c=>c.cat);
+
+  // group custom items by their chosen section for interleaving
+  const customByCat={}, orphans=[];
+  S.custom.forEach((c,idx)=>{
+    if(c.cat && currentCatNames.includes(c.cat)) (customByCat[c.cat]=customByCat[c.cat]||[]).push({c,idx});
+    else orphans.push({c,idx});
+  });
+
+  cats.forEach((cat,ci)=>{
+    let body=""; let count=0;
+    cat.items.forEach((item,ii)=>{
+      const key=meal+"::"+ci+"::"+ii;
+      if(S.hidden[key]) return;
+      const gc=item.v?oN:guests;
+      body+=buildRow(item,key,gc,m,cuisM,false); count++;
+      if(item.v && vN>0) body+=buildRow(item,key+"::veg",vN,m,cuisM,true);
+    });
+    (customByCat[cat.cat]||[]).forEach(({c,idx})=>{
+      const item={n:c.n,amt:c.amt,u:c.u,p:c.p,custom:1,ci:idx,g:c.g};
+      body+=buildRow(item,"custom::"+idx,guests,m,cuisM,false); count++;
+    });
+    if(count===0) return; // whole section removed — hide the empty card
+    const h='<div class="clabel">'+cat.cat+(S.cost?'<span class="csub">qty · $/unit · line cost</span>':'')+'</div>'+body;
+    const card=document.createElement("div"); card.className="catcard"; card.innerHTML=h;
+    cont.appendChild(card);
+  });
+
+  // custom items that don't map to a section in this meal
+  if(orphans.length){
+    let h='<div class="clabel">Other custom items'+(S.cost?'<span class="csub">qty · $/unit · line cost</span>':'')+'</div>';
+    orphans.forEach(({c,idx})=>{
+      const item={n:c.n,amt:c.amt,u:c.u,p:c.p,custom:1,ci:idx,g:c.g};
+      h+=buildRow(item,"custom::"+idx,guests,m,cuisM,false);
+    });
+    const card=document.createElement("div"); card.className="catcard"; card.innerHTML=h;
+    cont.appendChild(card);
+  }
+
+  // restore panel for any presets removed from this meal
+  const hiddenList=Object.keys(S.hidden).filter(k=>k.startsWith(meal+"::"));
+  if(hiddenList.length){
+    let chips="";
+    hiddenList.forEach(k=>{ chips+='<button class="chip" onclick="restorePreset(\''+k+'\')">+ '+S.hidden[k]+'</button>'; });
+    const h='<div class="clabel" style="color:var(--muted)">Removed from this menu<button class="restore-all" onclick="restoreAllMeal()">Restore all</button></div><div class="chips">'+chips+'</div>';
+    const card=document.createElement("div"); card.className="catcard"; card.innerHTML=h;
+    cont.appendChild(card);
+  }
+
+  // cost summary
+  const cs=document.getElementById("costSummary");
+  if(S.cost){
+    const perGuest = guests>0 ? runningCost/guests : 0;
+    cs.innerHTML='<div class="costsum"><div class="grid">'+
+      '<div class="box"><div class="l">Estimated food cost</div><div class="n accent">'+money(runningCost)+'</div></div>'+
+      '<div class="box"><div class="l">Cost per guest</div><div class="n">'+money(perGuest)+'</div></div>'+
+      '</div></div>';
+  } else cs.innerHTML="";
+}
+
+function setPrice(el){
+  const v=parseFloat(el.value);
+  S.priceOv[el.dataset.key] = isNaN(v)?0:v;
+  render();
+  // refocus same field after re-render
+  const again=document.querySelector('input[data-key="'+el.dataset.key+'"]');
+  if(again){again.focus();again.setSelectionRange(again.value.length,again.value.length);}
+}
+
+function sectionGroup(name){
+  const map={
+    "Proteins":"protein","Eggs & protein":"protein","Hot bites":"protein",
+    "Starches":"starch","Carbs":"starch",
+    "Vegetables":"veg","Sides":"veg","Produce":"veg",
+    "Bread":"bread"
+  };
+  return map[name]||null;
+}
+
+function addCustom(){
+  const n=document.getElementById("cName").value.trim();
+  const amt=parseFloat(document.getElementById("cAmt").value);
+  const u=document.getElementById("cUnit").value;
+  const p=parseFloat(document.getElementById("cPrice").value)||0;
+  const cat=document.getElementById("cCat").value;
+  if(!n||isNaN(amt)||amt<=0){
+    document.getElementById("cName").focus();
+    return;
+  }
+  const item={n,amt,u,p,cat,g:sectionGroup(cat)};
+  if(S.editing!=null){ S.custom[S.editing]=item; }
+  else { S.custom.push(item); }
+  exitEdit();
+  render();
+}
+
+function editCustom(i){
+  const c=S.custom[i];
+  S.editing=i;
+  document.getElementById("cName").value=c.n;
+  document.getElementById("cAmt").value=c.amt;
+  document.getElementById("cUnit").value=c.u;
+  document.getElementById("cPrice").value=c.p||"";
+  refreshCatOptions();
+  const sel=document.getElementById("cCat");
+  if([...sel.options].some(o=>o.value===c.cat)) sel.value=c.cat;
+  document.getElementById("cAdd").textContent="Save changes";
+  document.getElementById("cCancel").style.display="block";
+  document.getElementById("cName").focus();
+}
+
+function exitEdit(){
+  S.editing=null;
+  document.getElementById("cName").value="";
+  document.getElementById("cAmt").value="";
+  document.getElementById("cPrice").value="";
+  document.getElementById("cAdd").textContent="+ Add to sheet";
+  document.getElementById("cCancel").style.display="none";
+}
+
+function delCustom(i){
+  if(S.editing===i) exitEdit();
+  S.custom.splice(i,1);
+  render();
+}
+
+function hidePreset(key){
+  const p=key.split("::");
+  const it = CATS[p[0]] && CATS[p[0]][+p[1]] && CATS[p[0]][+p[1]].items[+p[2]];
+  S.hidden[key]= it ? it.n : "Item";
+  render();
+}
+function restorePreset(key){ delete S.hidden[key]; render(); }
+function restoreAllMeal(){
+  Object.keys(S.hidden).forEach(k=>{ if(k.startsWith(S.meal+"::")) delete S.hidden[k]; });
+  render();
+}
+
+function refreshCatOptions(){
+  const sel=document.getElementById("cCat");
+  const prev=sel.value;
+  sel.innerHTML="";
+  (CATS[S.meal]||[]).forEach(c=>{
+    const o=document.createElement("option");o.value=c.cat;o.textContent=c.cat;sel.appendChild(o);
+  });
+  const oth=document.createElement("option");oth.value="Other";oth.textContent="Other / misc";sel.appendChild(oth);
+  if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
+}
+
+function copySheet(){
+  const {guests,meal,veg,buf,cuisine}=S;
+  const m=buf?1.1:1;
+  const vN=Math.round(guests*veg/100), oN=guests-vN;
+  const cuisM=CUISINES[cuisine].m;
+  const mi=MEALS.find(x=>x.id===meal);
+  let out=mi.label+" — "+guests+" guests\n";
+  out+=(vN>0?oN+" omnivore, "+vN+" veg/vegan, ":"")+(buf?"+10% buffer":"no buffer");
+  if(cuisine!=="standard") out+=", "+CUISINES[cuisine].label+" portions";
+  out+="\n"+"=".repeat(40)+"\n";
+  const cats=CATS[meal]||[];
+  const currentCatNames=cats.map(c=>c.cat);
+  const customByCat={}, orphans=[];
+  S.custom.forEach(c=>{
+    if(c.cat&&currentCatNames.includes(c.cat))(customByCat[c.cat]=customByCat[c.cat]||[]).push(c);
+    else orphans.push(c);
+  });
+  cats.forEach((cat,ci)=>{
+    let block=""; let count=0;
+    cat.items.forEach((item,ii)=>{
+      if(S.hidden[meal+"::"+ci+"::"+ii]) return;
+      const gm=item.g&&cuisM[item.g]?cuisM[item.g]:1;
+      const gc=item.v?oN:guests;
+      const q=qty(item.amt*gm*gc*m,item.u);
+      block+="  "+item.n+": "+q.label+"\n"; count++;
+      if(item.v&&vN>0){const vq=qty(item.amt*gm*vN*m,item.u);block+="  "+(item.vn||"Veggie option")+": "+vq.label+"\n";}
+    });
+    (customByCat[cat.cat]||[]).forEach(c=>{const gm=c.g&&cuisM[c.g]?cuisM[c.g]:1;const q=qty(c.amt*gm*guests*m,c.u);block+="  "+c.n+": "+q.label+"\n"; count++;});
+    if(count>0) out+="\n"+cat.cat.toUpperCase()+"\n"+block;
+  });
+  if(orphans.length){
+    out+="\nOTHER CUSTOM ITEMS\n";
+    orphans.forEach(c=>{const gm=c.g&&cuisM[c.g]?cuisM[c.g]:1;const q=qty(c.amt*gm*guests*m,c.u);out+="  "+c.n+": "+q.label+"\n";});
+  }
+  navigator.clipboard.writeText(out).then(()=>{
+    const b=document.getElementById("copyBtn");
+    const o=b.innerHTML; b.innerHTML="<span>✓</span> Copied";
+    setTimeout(()=>b.innerHTML=o,1400);
+  });
+}
+
+// init
+const mbc=document.getElementById("mealBtns");
+MEALS.forEach(m=>{
+  const b=document.createElement("button");
+  b.className="mbtn"+(m.id===S.meal?" on":""); b.dataset.id=m.id;
+  b.innerHTML='<div>'+m.label+'</div><div class="d">'+m.d+'</div>';
+  b.onclick=()=>{S.meal=m.id;refreshCatOptions();render();};
+  mbc.appendChild(b);
+});
+const cuiSel=document.getElementById("cuisine");
+Object.keys(CUISINES).forEach(k=>{
+  const o=document.createElement("option"); o.value=k; o.textContent=CUISINES[k].label;
+  cuiSel.appendChild(o);
+});
+cuiSel.onchange=()=>{S.cuisine=cuiSel.value;render();};
+
+const gi=document.getElementById("gi"),gs=document.getElementById("gs"),vs=document.getElementById("vs");
+gi.oninput=()=>{const v=Math.max(1,parseInt(gi.value)||1);S.guests=v;if(v<=500)gs.value=v;render();};
+gs.oninput=()=>{S.guests=parseInt(gs.value);gi.value=S.guests;render();};
+vs.oninput=()=>{S.veg=parseInt(vs.value);render();};
+document.getElementById("bufTog").onclick=function(){S.buf=!S.buf;this.classList.toggle("on",S.buf);render();};
+document.getElementById("costTog").onclick=function(){S.cost=!S.cost;this.classList.toggle("on",S.cost);render();};
+document.getElementById("cAdd").onclick=addCustom;
+document.getElementById("cCancel").onclick=exitEdit;
+document.getElementById("copyBtn").onclick=copySheet;
+document.getElementById("cName").addEventListener("keydown",e=>{if(e.key==="Enter")addCustom();});
+
+refreshCatOptions();
+render();
+</script>
+</body>
+</html>
